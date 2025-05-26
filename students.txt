@@ -1,0 +1,15 @@
+Alice
+8.5
+C++, Python, Java, web dev, Machine learning
+7
+Eligible
+Bob
+6.8
+Python, HTML, Mini project
+4
+Not Eligible
+Charlie
+9
+C++, Python, Javascript, AI, Internship
+6
+Eligible

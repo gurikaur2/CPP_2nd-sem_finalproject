@@ -1,0 +1,256 @@
+<!-- <!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Placement Eligibility Checker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h2 {
+      color: #333;
+    }
+
+    #drop-zone {
+      border: 3px dashed #3498db;
+      border-radius: 10px;
+      background-color: #eaf6ff;
+      color: #3498db;
+      padding: 40px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      margin-bottom: 30px;
+      transition: background 0.3s;
+    }
+
+    #drop-zone:hover {
+      background-color: #d4efff;
+    }
+
+    .student {
+      background: white;
+      border-left: 6px solid #3498db;
+      box-shadow: 0 3px 8px rgba(0,0,0,0.1);
+      margin-bottom: 15px;
+      padding: 15px 20px;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      transition: transform 0.2s;
+    }
+
+    .student:hover {
+      transform: scale(1.01);
+    }
+
+    .eligible {
+      color: green;
+      font-weight: bold;
+    }
+
+    .not-eligible {
+      color: red;
+      font-weight: bold;
+    }
+
+    .label {
+      font-weight: 600;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>🎓 Placement Eligibility Checker</h2>
+  <div id="drop-zone">📄 Drag and drop the <strong>students.txt</strong> file here</div>
+  <div id="output"></div>
+
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const output = document.getElementById('output');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = "#d4efff";
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.backgroundColor = "#eaf6ff";
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = "#eaf6ff";
+
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const lines = event.target.result.split('\n').map(line => line.trim()).filter(Boolean);
+          let html = "";
+
+          for (let i = 0; i < lines.length; i += 5) {
+            const name = lines[i];
+            const cgpa = lines[i + 1];
+            const skills = lines[i + 2];
+            const projects = lines[i + 3];
+            const eligibility = lines[i + 4];
+
+            html += `
+              <div class="student">
+                <div><span class="label">👤 Name:</span> ${name}</div>
+                <div><span class="label">📊 CGPA:</span> ${cgpa}</div>
+                <div><span class="label">💼 Skills:</span> ${skills}</div>
+                <div><span class="label">🛠 Projects:</span> ${projects}</div>
+                <div><span class="label">✅ Status:</span> <span class="${eligibility.toLowerCase().includes('eligible') ? 'eligible' : 'not-eligible'}">${eligibility}</span></div>
+              </div>
+            `;
+          }
+
+          output.innerHTML = html;
+        };
+        reader.readAsText(file);
+      }
+    });
+  </script>
+</body>
+</html> -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Placement Eligibility Checker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f7faff;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+    }
+
+    h2 {
+      color: #2c3e50;
+      margin-bottom: 20px;
+    }
+
+    #drop-zone {
+      border: 3px dashed #3498db;
+      border-radius: 10px;
+      background-color: #eaf6ff;
+      color: #3498db;
+      padding: 40px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      margin-bottom: 30px;
+      transition: background 0.3s;
+    }
+
+    #drop-zone:hover {
+      background-color: #d0ebff;
+    }
+
+    .student {
+      background: #fff;
+      border-left: 6px solid #3498db;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+      margin-bottom: 18px;
+      padding: 16px 24px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+    }
+
+    .eligible {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .not-eligible {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .label {
+      font-weight: 600;
+      color: #555;
+    }
+
+    .value {
+      margin-left: 6px;
+    }
+  </style>
+</head>
+<body>
+
+  <h2>📄 Placement Eligibility Checker</h2>
+  <div id="drop-zone">⬇️ Drag and drop your <strong>students.txt</strong> file here</div>
+  <div id="output"></div>
+
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const output = document.getElementById('output');
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = "#d0ebff";
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+      dropZone.style.backgroundColor = "#eaf6ff";
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.style.backgroundColor = "#eaf6ff";
+
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const rawLines = event.target.result.split('\n');
+          const lines = rawLines.map(line => line.trim()).filter(Boolean);
+          let html = "";
+
+          for (let i = 0; i + 4 < lines.length; i += 5) {
+            const name = lines[i];
+            const cgpa = lines[i + 1];
+            const skills = lines[i + 2];
+            const projects = lines[i + 3];
+            const eligibility = lines[i + 4].toLowerCase();
+
+            const statusClass = eligibility.includes("eligible") ? 'eligible' : 'not-eligible';
+            const statusText = eligibility.charAt(0).toUpperCase() + eligibility.slice(1);
+
+            html += `
+              <div class="student">
+                <div><span class="label">👤 Name:</span><span class="value">${name}</span></div>
+                <div><span class="label">📊 CGPA:</span><span class="value">${cgpa}</span></div>
+                <div><span class="label">💡 Skills:</span><span class="value">${skills}</span></div>
+                <div><span class="label">🛠 Projects:</span><span class="value">${projects}</span></div>
+                <div><span class="label">📌 Status:</span> <span class="${statusClass}">${statusText}</span></div>
+              </div>
+            `;
+          }
+
+          if (html === "") {
+            output.innerHTML = "<p style='color: gray;'>⚠️ No valid student entries found in the file.</p>";
+          } else {
+            output.innerHTML = html;
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  </script>
+</body>
+</html>

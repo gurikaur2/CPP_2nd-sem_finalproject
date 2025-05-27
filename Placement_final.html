@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Placement Eligibility Checker</title>
+
+  <!-- SheetJS for Excel export -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    :root {
+      --bg-color-light: #f7faff;
+      --text-color-light: #2c3e50;
+      --zone-bg-light: #eaf6ff;
+      --zone-hover-light: #d0ebff;
+      --card-bg-light: #fff;
+
+      --bg-color-dark: #1e1e2f;
+      --text-color-dark: #f5f5f5;
+      --zone-bg-dark: #2a2f45;
+      --zone-hover-dark: #39425f;
+      --card-bg-dark: #2e2e40;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px;
+      background-color: var(--bg-color-light);
+      color: var(--text-color-light);
+      transition: all 0.3s ease;
+    }
+
+    body.dark {
+      background-color: var(--bg-color-dark);
+      color: var(--text-color-dark);
+    }
+
+    h2 {
+      margin-bottom: 20px;
+    }
+
+    #theme-toggle {
+      position: absolute;
+      top: 20px;
+      right: 30px;
+      padding: 8px 12px;
+      background-color: #3498db;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    #drop-zone {
+      border: 3px dashed #3498db;
+      border-radius: 10px;
+      padding: 40px;
+      width: 90%;
+      max-width: 600px;
+      text-align: center;
+      margin-bottom: 30px;
+      background-color: var(--zone-bg-light);
+      transition: background 0.3s;
+    }
+
+    body.dark #drop-zone {
+      background-color: var(--zone-bg-dark);
+    }
+
+    #drop-zone:hover {
+      background-color: var(--zone-hover-light);
+    }
+
+    body.dark #drop-zone:hover {
+      background-color: var(--zone-hover-dark);
+    }
+
+    .student {
+      background: var(--card-bg-light);
+      border-left: 6px solid #3498db;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+      margin-bottom: 18px;
+      padding: 16px 24px;
+      border-radius: 10px;
+      width: 90%;
+      max-width: 600px;
+      transition: background 0.3s;
+    }
+
+    body.dark .student {
+      background: var(--card-bg-dark);
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
+    }
+
+    .eligible {
+      color: #27ae60;
+      font-weight: bold;
+    }
+
+    .not-eligible {
+      color: #e74c3c;
+      font-weight: bold;
+    }
+
+    .label {
+      font-weight: 600;
+      color: inherit;
+    }
+
+    .value {
+      margin-left: 6px;
+    }
+
+    #export-btn {
+      margin-top: 20px;
+      padding: 10px 20px;
+      background-color: #2ecc71;
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+
+  <button id="theme-toggle">🌓 Toggle Theme</button>
+
+  <h2>📄 Placement Eligibility Checker</h2>
+  <div id="drop-zone">⬇️ Drag and drop your <strong>students.txt</strong> file here</div>
+  <div id="output"></div>
+
+  <script>
+    const dropZone = document.getElementById('drop-zone');
+    const output = document.getElementById('output');
+    const themeToggle = document.getElementById('theme-toggle');
+
+    let studentData = [];
+
+    // Theme Management
+    const userPref = localStorage.getItem('theme');
+    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+
+    if (userPref === 'dark' || (!userPref && prefersDark)) {
+      document.body.classList.add('dark');
+    }
+
+    themeToggle.addEventListener('click', () => {
+      document.body.classList.toggle('dark');
+      const isDark = document.body.classList.contains('dark');
+      localStorage.setItem('theme', isDark ? 'dark' : 'light');
+    });
+
+    dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      const file = e.dataTransfer.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = function(event) {
+          const rawLines = event.target.result.split('\n');
+          const lines = rawLines.map(line => line.trim()).filter(Boolean);
+          let html = "";
+          studentData = [];
+
+          for (let i = 0; i + 4 < lines.length; i += 5) {
+            const name = lines[i];
+            const cgpa = lines[i + 1];
+            const skills = lines[i + 2];
+            const projects = lines[i + 3];
+            const eligibility = lines[i + 4].toLowerCase();
+
+            const statusClass = eligibility.includes("eligible") ? 'eligible' : 'not-eligible';
+            const statusText = eligibility.charAt(0).toUpperCase() + eligibility.slice(1);
+
+            html += `
+              <div class="student">
+                <div><span class="label">👤 Name:</span><span class="value">${name}</span></div>
+                <div><span class="label">📊 CGPA:</span><span class="value">${cgpa}</span></div>
+                <div><span class="label">💡 Skills:</span><span class="value">${skills}</span></div>
+                <div><span class="label">🛠 Projects:</span><span class="value">${projects}</span></div>
+                <div><span class="label">📌 Status:</span> <span class="${statusClass}">${statusText}</span></div>
+              </div>
+            `;
+
+            studentData.push({
+              Name: name,
+              CGPA: cgpa,
+              Skills: skills,
+              Projects: projects,
+              Status: statusText
+            });
+          }
+
+          if (studentData.length > 0) {
+            html += `<button id="export-btn">📤 Export to Excel</button>`;
+          }
+
+          output.innerHTML = html || "<p style='color: gray;'>⚠️ No valid student entries found in the file.</p>";
+
+          if (studentData.length > 0) {
+            document.getElementById('export-btn').addEventListener('click', () => {
+              const worksheet = XLSX.utils.json_to_sheet(studentData);
+              const workbook = XLSX.utils.book_new();
+              XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
+              XLSX.writeFile(workbook, "Placement_Eligibility_Report.xlsx");
+            });
+          }
+        };
+        reader.readAsText(file);
+      }
+    });
+  </script>
+</body>
+</html>

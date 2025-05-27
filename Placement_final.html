@@ -2,24 +2,43 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Placement Eligibility Checker</title>
 
-  <!-- SheetJS for Excel export -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 
   <style>
+    /* CSS Variables for theming */
     :root {
-      --bg-color-light: #f7faff;
+      --bg-color-light: #f0f9ff;
       --text-color-light: #2c3e50;
-      --zone-bg-light: #eaf6ff;
+      --zone-bg-light: #e0f7ff;
       --zone-hover-light: #d0ebff;
-      --card-bg-light: #fff;
+      --card-bg-light: #ffffff;
+      --border-color-light: #3498db;
+      --h2-color-light: #2980b9;
+      --toggle-bg-light: #3498db;
+      --toggle-hover-light: #2980b9;
 
       --bg-color-dark: #1e1e2f;
       --text-color-dark: #f5f5f5;
       --zone-bg-dark: #2a2f45;
       --zone-hover-dark: #39425f;
       --card-bg-dark: #2e2e40;
+      --border-color-dark: #6a5acd; /* A purple tone for dark mode border */
+      --h2-color-dark: #8a2be2; /* BlueViolet for dark mode h2 */
+      --toggle-bg-dark: #6a5acd;
+      --toggle-hover-dark: #5a4b9a;
+
+      /* Popup colors */
+      --popup-success-bg: #d4edda;
+      --popup-success-text: #155724;
+      --popup-success-border: #28a745;
+
+      --popup-error-bg: #f8d7da;
+      --popup-error-text: #721c24;
+      --popup-error-border: #dc3545;
     }
 
     body {
@@ -27,6 +46,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
+      justify-content: center; /* Center content vertically */
+      min-height: 100vh; /* Ensure body takes full viewport height */
+      margin: 0;
       padding: 30px;
       background-color: var(--bg-color-light);
       color: var(--text-color-light);
@@ -40,6 +62,12 @@
 
     h2 {
       margin-bottom: 20px;
+      color: var(--h2-color-light);
+      transition: color 0.3s ease;
+    }
+
+    body.dark h2 {
+      color: var(--h2-color-dark);
     }
 
     #theme-toggle {
@@ -47,16 +75,29 @@
       top: 20px;
       right: 30px;
       padding: 8px 12px;
-      background-color: #3498db;
+      background-color: var(--toggle-bg-light);
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    #theme-toggle:hover {
+      background-color: var(--toggle-hover-light);
+    }
+
+    body.dark #theme-toggle {
+      background-color: var(--toggle-bg-dark);
+    }
+
+    body.dark #theme-toggle:hover {
+      background-color: var(--toggle-hover-dark);
     }
 
     #drop-zone {
-      border: 3px dashed #3498db;
+      border: 3px dashed var(--border-color-light);
       border-radius: 10px;
       padding: 40px;
       width: 90%;
@@ -64,19 +105,54 @@
       text-align: center;
       margin-bottom: 30px;
       background-color: var(--zone-bg-light);
-      transition: background 0.3s;
+      transition: background 0.3s ease, border-color 0.3s ease;
+      cursor: pointer; /* Indicate clickable */
+      display: flex; /* Use flexbox for internal centering */
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 150px; /* Ensure enough height for content */
     }
 
     body.dark #drop-zone {
       background-color: var(--zone-bg-dark);
+      border-color: var(--border-color-dark);
     }
 
-    #drop-zone:hover {
+    #drop-zone.drag-over {
       background-color: var(--zone-hover-light);
+      border-color: #007bff; /* Keep a distinct highlight color */
     }
 
-    body.dark #drop-zone:hover {
+    body.dark #drop-zone.drag-over {
       background-color: var(--zone-hover-dark);
+      border-color: #9370db; /* MediumPurple for dark mode highlight */
+    }
+
+    .file-icon {
+      font-size: 3em; /* Larger icon */
+      margin-bottom: 15px;
+      color: var(--border-color-light); /* Match icon color to border */
+      transition: color 0.3s ease;
+    }
+
+    body.dark .file-icon {
+      color: var(--border-color-dark);
+    }
+
+    #file-input {
+      display: none; /* Hide the actual file input */
+    }
+
+    .click-text {
+      text-decoration: underline;
+      cursor: pointer;
+      margin-top: 10px; /* Space between "or" and "Click" */
+    }
+
+    #output {
+      width: 100%;
+      max-width: 600px;
     }
 
     .student {
@@ -86,29 +162,29 @@
       margin-bottom: 18px;
       padding: 16px 24px;
       border-radius: 10px;
-      width: 90%;
-      max-width: 600px;
-      transition: background 0.3s;
+      width: calc(100% - 12px); /* Account for border-left */
+      box-sizing: border-box; /* Include padding and border in width */
+      transition: background 0.3s ease, box-shadow 0.3s ease, border-color 0.3s ease;
     }
 
     body.dark .student {
       background: var(--card-bg-dark);
+      border-color: var(--border-color-dark);
       box-shadow: 0 4px 10px rgba(0, 0, 0, 0.3);
     }
 
     .eligible {
-      color: #27ae60;
+      color: #27ae60; /* Green */
       font-weight: bold;
     }
 
     .not-eligible {
-      color: #e74c3c;
+      color: #ed200a; /* Red */
       font-weight: bold;
     }
 
     .label {
       font-weight: 600;
-      color: inherit;
     }
 
     .value {
@@ -118,12 +194,87 @@
     #export-btn {
       margin-top: 20px;
       padding: 10px 20px;
-      background-color: #2ecc71;
+      background-color: #2ecc71; /* Green */
       color: white;
       border: none;
       border-radius: 8px;
       cursor: pointer;
       font-size: 14px;
+      transition: background-color 0.3s ease;
+    }
+
+    #export-btn:hover {
+      background-color: #27ae60; /* Darker green */
+    }
+
+    /* --- Popup Styles --- */
+    .popup-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.5); /* Semi-transparent black overlay */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000; /* Ensure it's on top of other content */
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.3s ease, visibility 0.3s ease;
+    }
+
+    .popup-overlay.show {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .popup-content {
+      background-color: white;
+      padding: 25px 35px;
+      border-radius: 10px;
+      box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      position: relative;
+      transform: translateY(-20px); /* Initial slight offset */
+      transition: transform 0.3s ease;
+    }
+
+    .popup-overlay.show .popup-content {
+      transform: translateY(0); /* Slide in effect */
+    }
+
+    .popup-content.success {
+      background-color: var(--popup-success-bg);
+      color: var(--popup-success-text);
+      border: 1px solid var(--popup-success-border);
+    }
+
+    .popup-content.error {
+      background-color: var(--popup-error-bg);
+      color: var(--popup-error-text);
+      border: 1px solid var(--popup-error-border);
+    }
+
+    .popup-close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 1.5em;
+      cursor: pointer;
+      color: #888;
+      transition: color 0.2s ease;
+    }
+
+    .popup-close:hover {
+      color: #333;
+    }
+
+    .popup-message {
+      margin-bottom: 15px;
+      font-size: 1.1em;
     }
   </style>
 </head>
@@ -132,92 +283,195 @@
   <button id="theme-toggle">🌓 Toggle Theme</button>
 
   <h2>📄 Placement Eligibility Checker</h2>
-  <div id="drop-zone">⬇️ Drag and drop your <strong>students.txt</strong> file here</div>
+  <div id="drop-zone">
+    <i class="fas fa-file-alt file-icon"></i> <span>Drag and drop your <strong>students.txt</strong> file here</span>
+    <br>
+    <span>or</span>
+    <br>
+    <span class="click-text">Click to select file</span>
+    <input type="file" id="file-input" accept=".txt">
+  </div>
   <div id="output"></div>
+
+  <div id="custom-popup" class="popup-overlay">
+    <div class="popup-content">
+      <span class="popup-close">&times;</span>
+      <p class="popup-message"></p>
+    </div>
+  </div>
 
   <script>
     const dropZone = document.getElementById('drop-zone');
     const output = document.getElementById('output');
     const themeToggle = document.getElementById('theme-toggle');
-
+    const fileInput = document.getElementById('file-input');
+    const customPopup = document.getElementById('custom-popup');
+    const popupMessage = customPopup.querySelector('.popup-message');
+    const popupClose = customPopup.querySelector('.popup-close');
+    const popupContent = customPopup.querySelector('.popup-content');
     let studentData = [];
 
-    // Theme Management
+    // --- Popup Functionality ---
+    function showPopup(message, type) {
+      popupMessage.textContent = message;
+      // Clear previous type classes
+      popupContent.classList.remove('success', 'error');
+      // Add new type class
+      popupContent.classList.add(type);
+      customPopup.classList.add('show');
+
+      // Automatically hide popup after 3 seconds for success, or keep for error until closed
+      if (type === 'success') {
+        setTimeout(() => {
+          hidePopup();
+        }, 3000);
+      }
+    }
+
+    function hidePopup() {
+      customPopup.classList.remove('show');
+    }
+
+    // Close popup when close button is clicked
+    popupClose.addEventListener('click', hidePopup);
+    // Close popup when overlay is clicked (optional, but common)
+    customPopup.addEventListener('click', (e) => {
+      if (e.target === customPopup) { // Only close if clicking the overlay itself, not content
+        hidePopup();
+      }
+    });
+
+    // --- Theme Management ---
     const userPref = localStorage.getItem('theme');
-    const prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
 
     if (userPref === 'dark' || (!userPref && prefersDark)) {
       document.body.classList.add('dark');
+    } else {
+      document.body.classList.add('light');
     }
 
     themeToggle.addEventListener('click', () => {
       document.body.classList.toggle('dark');
+      document.body.classList.toggle('light');
       const isDark = document.body.classList.contains('dark');
       localStorage.setItem('theme', isDark ? 'dark' : 'light');
     });
 
-    dropZone.addEventListener('dragover', (e) => {
-      e.preventDefault();
-    });
-
-    dropZone.addEventListener('drop', (e) => {
-      e.preventDefault();
-      const file = e.dataTransfer.files[0];
-      if (file) {
-        const reader = new FileReader();
-        reader.onload = function(event) {
-          const rawLines = event.target.result.split('\n');
-          const lines = rawLines.map(line => line.trim()).filter(Boolean);
-          let html = "";
-          studentData = [];
-
-          for (let i = 0; i + 4 < lines.length; i += 5) {
-            const name = lines[i];
-            const cgpa = lines[i + 1];
-            const skills = lines[i + 2];
-            const projects = lines[i + 3];
-            const eligibility = lines[i + 4].toLowerCase();
-
-            const statusClass = eligibility.includes("eligible") ? 'eligible' : 'not-eligible';
-            const statusText = eligibility.charAt(0).toUpperCase() + eligibility.slice(1);
-
-            html += `
-              <div class="student">
-                <div><span class="label">👤 Name:</span><span class="value">${name}</span></div>
-                <div><span class="label">📊 CGPA:</span><span class="value">${cgpa}</span></div>
-                <div><span class="label">💡 Skills:</span><span class="value">${skills}</span></div>
-                <div><span class="label">🛠 Projects:</span><span class="value">${projects}</span></div>
-                <div><span class="label">📌 Status:</span> <span class="${statusClass}">${statusText}</span></div>
-              </div>
-            `;
-
-            studentData.push({
-              Name: name,
-              CGPA: cgpa,
-              Skills: skills,
-              Projects: projects,
-              Status: statusText
-            });
-          }
-
-          if (studentData.length > 0) {
-            html += `<button id="export-btn">📤 Export to Excel</button>`;
-          }
-
-          output.innerHTML = html || "<p style='color: gray;'>⚠️ No valid student entries found in the file.</p>";
-
-          if (studentData.length > 0) {
-            document.getElementById('export-btn').addEventListener('click', () => {
-              const worksheet = XLSX.utils.json_to_sheet(studentData);
-              const workbook = XLSX.utils.book_new();
-              XLSX.utils.book_append_sheet(workbook, worksheet, "Students");
-              XLSX.writeFile(workbook, "Placement_Eligibility_Report.xlsx");
-            });
-          }
-        };
-        reader.readAsText(file);
+    // --- File Processing Function ---
+    function processFile(file) {
+      if (!file || !file.name.endsWith('.txt')) {
+        showPopup('Please select or drop a "students.txt" file. Other file types are not supported.', 'error');
+        console.warn('Invalid file type or no file:', file ? file.name : 'No file');
+        return;
       }
-    });
+
+      const reader = new FileReader();
+
+      reader.onload = (event) => {
+        const rawLines = event.target.result.split('\n');
+        const lines = rawLines.map(line => line.trim()).filter(Boolean);
+        let html = "";
+        studentData = [];
+
+        for (let i = 0; i + 4 < lines.length; i += 5) {
+          const name = lines[i];
+          const cgpa = lines[i + 1];
+          const skills = lines[i + 2];
+          const projects = lines[i + 3];
+          const eligibility = lines[i + 4].toLowerCase();
+
+          const statusText = eligibility.charAt(0).toUpperCase() + eligibility.slice(1);
+          const statusClass = eligibility.includes("eligible") ? "eligible" : "not-eligible";
+
+          html += `
+            <div class="student">
+              <div><span class="label">👤 Name:</span><span class="value">${name}</span></div>
+              <div><span class="label">📊 CGPA:</span><span class="value">${cgpa}</span></div>
+              <div><span class="label">💡 Skills:</span><span class="value">${skills}</span></div>
+              <div><span class="label">🛠 Projects:</span><span class="value">${projects}</span></div>
+              <div><span class="label">📌 Status:</span><span class="${statusClass}"> ${statusText}</span></div>
+            </div>
+          `;
+
+          studentData.push({
+            Name: name,
+            CGPA: cgpa,
+            Skills: skills,
+            Projects: projects,
+            Status: statusText
+          });
+        }
+
+        if (studentData.length > 0) {
+          html += `<button id="export-btn">📤 Export to Excel</button>`;
+          showPopup(`Successfully loaded ${studentData.length} student entries!`, 'success');
+        } else {
+          html = "<p style='color: gray;'>⚠️ No valid student entries found in the file.</p>";
+          showPopup('No valid student entries found in the file.', 'error');
+        }
+
+        output.innerHTML = html;
+
+        if (studentData.length > 0) {
+          document.getElementById('export-btn').addEventListener('click', () => {
+            const ws = XLSX.utils.json_to_sheet(studentData);
+            
+            const statusColIndex = 4;
+            for (let i = 0; i < studentData.length; i++) {
+              const cellRef = XLSX.utils.encode_cell({ c: statusColIndex, r: i + 1 });
+              const status = studentData[i].Status.toLowerCase();
+              if (ws[cellRef]) {
+                ws[cellRef].s = {
+                  font: {
+                    bold: true,
+                    color: { rgb: status.includes('not') ? "FF0000" : "008000" }
+                  }
+                };
+              }
+            }
+
+            const wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Students");
+            XLSX.writeFile(wb, "Placement_Eligibility_Report.xlsx");
+          });
+        }
+      };
+      reader.readAsText(file);
+    }
+
+    // --- Drag & Drop Event Listeners ---
+    if (dropZone) {
+      dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.classList.add('drag-over');
+      });
+
+      dropZone.addEventListener('dragleave', () => {
+        dropZone.classList.remove('drag-over');
+      });
+
+      dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.classList.remove('drag-over');
+        const file = e.dataTransfer.files[0];
+        processFile(file);
+      });
+
+      // --- Click to Select File Event Listeners ---
+      dropZone.addEventListener('click', () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        processFile(file);
+        e.target.value = '';
+      });
+
+    } else {
+      console.error("Error: #drop-zone or #file-input element not found in HTML!");
+    }
   </script>
 </body>
 </html>
